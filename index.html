@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>校区参观预约</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
+    background: linear-gradient(160deg, #1d4ed8 0%, #2563eb 35%, #f1f5f9 35%, #f1f5f9 100%);
+    min-height: 100vh;
+    color: #1e293b;
+  }
+  .wrap { max-width: 480px; margin: 0 auto; padding: 24px 18px 40px; }
+  .header { color: #fff; padding: 16px 6px 28px; }
+  .header h1 { margin: 0; font-size: 22px; font-weight: 700; }
+  .header p { margin: 6px 0 0; font-size: 13px; opacity: .85; }
+  .card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 22px 18px;
+    box-shadow: 0 10px 30px rgba(15,23,42,.12);
+  }
+  .field { margin-bottom: 18px; }
+  .field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 7px; color: #334155; }
+  .input {
+    width: 100%;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 15px;
+    outline: none;
+    transition: border-color .15s;
+    background: #f8fafc;
+  }
+  .input:focus { border-color: #2563eb; background: #fff; }
+  select.input { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; }
+  .code-row { display: flex; gap: 10px; }
+  .code-row .input { flex: 1; }
+  .btn {
+    border: none;
+    border-radius: 10px;
+    padding: 13px 16px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .15s, transform .05s;
+  }
+  .btn:active { transform: scale(.98); }
+  .btn-primary { background: #2563eb; color: #fff; width: 100%; }
+  .btn-primary:disabled { background: #94a3b8; cursor: not-allowed; }
+  .btn-code { background: #eff6ff; color: #2563eb; white-space: nowrap; min-width: 110px; }
+  .btn-code:disabled { color: #94a3b8; background: #f1f5f9; cursor: not-allowed; }
+  .dates { display: flex; flex-direction: column; gap: 10px; }
+  .date-row { display: flex; gap: 8px; align-items: center; }
+  .date-row .input { flex: 1; }
+  .btn-del { background: #fef2f2; color: #ef4444; padding: 10px 12px; border-radius: 10px; border: none; cursor: pointer; font-size: 14px; }
+  .btn-add { background: transparent; color: #2563eb; border: 1.5px dashed #bfdbfe; width: 100%; margin-top: 4px; }
+  .time-row { display: flex; gap: 10px; }
+  .time-row .field { flex: 1; }
+  .hint { font-size: 12px; color: #94a3b8; margin-top: 6px; }
+  .log {
+    margin-top: 18px;
+    background: #0f172a;
+    color: #e2e8f0;
+    border-radius: 12px;
+    padding: 14px;
+    font-size: 12px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    line-height: 1.6;
+    max-height: 240px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+    display: none;
+  }
+  .log .ok { color: #4ade80; }
+  .log .err { color: #f87171; }
+  .log .info { color: #60a5fa; }
+  .section-title { font-size: 13px; font-weight: 600; margin: 4px 0 12px; color: #334155; }
+  .divider { height: 1px; background: #f1f5f9; margin: 20px 0; }
+  .badge { display:inline-block; background:#dcfce7; color:#166534; font-size:11px; padding:2px 8px; border-radius:6px; margin-left:8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <h1>校区参观预约</h1>
+    <p>北京理工大学 · 访客预约系统</p>
+  </div>
+
+  <div class="card">
+    <!-- 访客信息 -->
+    <div class="section-title">访客信息</div>
+
+    <div class="field">
+      <label>姓名</label>
+      <input class="input" id="name" type="text" placeholder="请输入姓名" value="张鑫">
+    </div>
+
+    <div class="field">
+      <label>身份证号</label>
+      <input class="input" id="cardno" type="text" placeholder="请输入身份证号" value="130181199212303040">
+    </div>
+
+    <div class="field">
+      <label>校区</label>
+      <select class="input" id="campus">
+        <option value="1" data-name="中关村校区">中关村校区</option>
+        <option value="2" data-name="良乡校区">良乡校区</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>手机号码 <span id="loginBadge"></span></label>
+      <input class="input" id="phone" type="tel" maxlength="11" placeholder="请输入手机号" value="18201209122">
+    </div>
+
+    <div class="field">
+      <label>验证码</label>
+      <div class="code-row">
+        <input class="input" id="code" type="tel" maxlength="6" placeholder="请输入验证码">
+        <button class="btn btn-code" id="getCodeBtn" onclick="getCode()">获取验证码</button>
+      </div>
+      <div class="hint">点击获取验证码后，输入收到的短信验证码</div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- 预约日期 -->
+    <div class="section-title">预约日期区间</div>
+
+    <div class="time-row">
+      <div class="field">
+        <label>开始日期</label>
+        <input class="input" id="startDate" type="date">
+      </div>
+      <div class="field">
+        <label>结束日期</label>
+        <input class="input" id="endDate" type="date">
+      </div>
+    </div>
+
+    <div class="time-row">
+      <div class="field">
+        <label>开始时间</label>
+        <input class="input" id="beginTime" type="time" value="09:00">
+      </div>
+      <div class="field">
+        <label>结束时间</label>
+        <input class="input" id="endTime" type="time" value="16:00">
+      </div>
+    </div>
+    <div class="hint">将对区间内每一天（含首尾）依次提交预约</div>
+
+    <div class="divider"></div>
+
+    <button class="btn btn-primary" id="submitBtn" onclick="submit()">提交预约</button>
+
+    <div class="log" id="log"></div>
+  </div>
+</div>
+
+<script>
+const BASE = 'https://bwvstr.bit.edu.cn/api/guestuser';
+let TOKEN = '';
+const PROFILE_KEY = 'visitor_profile';
+
+// ---------- 访客信息本地缓存 ----------
+function saveProfile(p) {
+  try { localStorage.setItem(PROFILE_KEY, JSON.stringify(p)); } catch (e) {}
+}
+function loadProfile() {
+  try {
+    const p = JSON.parse(localStorage.getItem(PROFILE_KEY) || 'null');
+    if (!p) return;
+    if (p.name) document.getElementById('name').value = p.name;
+    if (p.cardno) document.getElementById('cardno').value = p.cardno;
+    if (p.phone) document.getElementById('phone').value = p.phone;
+    if (p.campusId) document.getElementById('campus').value = p.campusId;
+  } catch (e) {}
+}
+
+// ---------- 日志 ----------
+const logEl = document.getElementById('log');
+function log(msg, type = '') {
+  logEl.style.display = 'block';
+  const span = document.createElement('span');
+  if (type) span.className = type;
+  span.textContent = msg + '\n';
+  logEl.appendChild(span);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+// ---------- 日期行 ----------
+function todayStr(offset = 0) {
+  const d = new Date();
+  d.setDate(d.getDate() + offset);
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${m}-${day}`;
+}
+
+// 初始化日期区间默认值（明天 ~ 明天）
+document.getElementById('startDate').value = todayStr(1);
+document.getElementById('endDate').value = todayStr(1);
+
+// 进页面自动回填上次提交的访客信息
+loadProfile();
+
+// 返回区间内的所有日期（含首尾）；区间非法返回 null
+function getDates() {
+  const start = document.getElementById('startDate').value;
+  const end = document.getElementById('endDate').value;
+  if (!start || !end) return [];
+  const startD = new Date(start + 'T00:00:00');
+  const endD = new Date(end + 'T00:00:00');
+  if (endD < startD) return null;
+  const dates = [];
+  for (let d = new Date(startD); d <= endD; d.setDate(d.getDate() + 1)) {
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    dates.push(`${d.getFullYear()}-${m}-${day}`);
+  }
+  return dates;
+}
+
+// ---------- 获取验证码 ----------
+let countdown = 0;
+async function getCode() {
+  const phone = document.getElementById('phone').value.trim();
+  if (!/^1\d{10}$/.test(phone)) { alert('请输入正确的手机号'); return; }
+  const btn = document.getElementById('getCodeBtn');
+  btn.disabled = true;
+  log(`[获取验证码] 手机号 ${phone} ...`, 'info');
+  try {
+    const res = await fetch(`${BASE}/getcode?phone=${encodeURIComponent(phone)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json;charset=UTF-8' },
+      body: '{}'
+    });
+    const data = await res.json();
+    if (data.code === 0) {
+      log('[获取验证码] 发送成功，请查收短信', 'ok');
+      startCountdown();
+    } else {
+      log('[获取验证码] 失败: ' + (data.msg || JSON.stringify(data)), 'err');
+      btn.disabled = false;
+    }
+  } catch (e) {
+    log('[获取验证码] 请求异常: ' + e.message, 'err');
+    btn.disabled = false;
+  }
+}
+
+function startCountdown() {
+  countdown = 60;
+  const btn = document.getElementById('getCodeBtn');
+  const tick = () => {
+    if (countdown <= 0) {
+      btn.disabled = false;
+      btn.textContent = '获取验证码';
+      return;
+    }
+    btn.textContent = `${countdown}s 后重试`;
+    countdown--;
+    setTimeout(tick, 1000);
+  };
+  tick();
+}
+
+// ---------- 登录拿 token ----------
+async function logon(phone, code) {
+  log('[登录] 验证码校验中 ...', 'info');
+  const res = await fetch(`${BASE}/phonelogon?phone=${encodeURIComponent(phone)}&code=${encodeURIComponent(code)}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json;charset=UTF-8' },
+    body: '{}'
+  });
+  const data = await res.json();
+  if (data.code === 0 && data.data && data.data.token) {
+    TOKEN = data.data.token;
+    document.getElementById('loginBadge').innerHTML = '<span class="badge">已登录</span>';
+    log('[登录] 成功，已获取 token', 'ok');
+    return true;
+  }
+  log('[登录] 失败: ' + (data.msg || JSON.stringify(data)), 'err');
+  return false;
+}
+
+// ---------- 提交预约 ----------
+async function submit() {
+  const phone = document.getElementById('phone').value.trim();
+  const code = document.getElementById('code').value.trim();
+  const name = document.getElementById('name').value.trim();
+  const cardno = document.getElementById('cardno').value.trim();
+  const campusSel = document.getElementById('campus');
+  const campusId = Number(campusSel.value);
+  const campusName = campusSel.options[campusSel.selectedIndex].dataset.name;
+  const begin = document.getElementById('beginTime').value;
+  const end = document.getElementById('endTime').value;
+  const dates = getDates();
+
+  if (!name) { alert('请输入姓名'); return; }
+  if (!cardno) { alert('请输入身份证号'); return; }
+  if (!/^1\d{10}$/.test(phone)) { alert('请输入正确的手机号'); return; }
+  if (!code) { alert('请输入验证码'); return; }
+  if (dates === null) { alert('结束日期不能早于开始日期'); return; }
+  if (dates.length === 0) { alert('请选择预约日期区间'); return; }
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = '提交中...';
+
+  // 保存访客基本信息，下次进页面自动回填
+  saveProfile({ name, cardno, campusId: campusSel.value, phone });
+
+  try {
+    // 1. 登录（每次提交都重新登录以拿到最新 token）
+    const ok = await logon(phone, code);
+    if (!ok) { btn.disabled = false; btn.textContent = '提交预约'; return; }
+
+    // 2. 循环每个日期调用预约接口
+    let success = 0, fail = 0;
+    for (const date of dates) {
+      const body = {
+        campusName,
+        campusId,
+        name,
+        cardno,
+        phone,
+        beginTime: `${date} ${begin}:00`,
+        endTime: `${date} ${end}:00`,
+        baseOrderType: 99,
+        otherVisits: []
+      };
+      log(`[预约] ${date} 提交中 ...`, 'info');
+      try {
+        const res = await fetch(`${BASE}/visitorder`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json;charset=UTF-8',
+            'Authorization': TOKEN
+          },
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if (data.code === 0) {
+          log(`[预约] ${date} 成功 ✓`, 'ok');
+          success++;
+        } else {
+          log(`[预约] ${date} 失败: ${data.msg || JSON.stringify(data)}`, 'err');
+          fail++;
+        }
+      } catch (e) {
+        log(`[预约] ${date} 异常: ${e.message}`, 'err');
+        fail++;
+      }
+    }
+    log(`[完成] 成功 ${success} 个，失败 ${fail} 个`, success > 0 ? 'ok' : 'err');
+    if (success > 0) alert(`预约完成！成功 ${success} 个，失败 ${fail} 个`);
+  } catch (e) {
+    log('[错误] ' + e.message, 'err');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '提交预约';
+  }
+}
+</script>
+</body>
+</html>
